@@ -1,7 +1,6 @@
 
 
-
-#🔌 RMshebei Tuya Smart WiFi Breaker 4P100A
+## 🔌 RMshebei Tuya Smart WiFi Breaker 4P100A
 Integração com Home Assistant + Cálculo Solar + Dashboard Completo
 
 📺 Vídeo explicando todo o sistema:
@@ -13,90 +12,130 @@ Integração com Home Assistant + Cálculo Solar + Dashboard Completo
 
 ---
 
-Projeto completo de monitoramento de energia solar utilizando:
+## ☀️ Projeto de Monitoramento de Energia Solar
 
-Disjuntor Tuya WiFi 4P100A com medição bidirecional
+Sistema completo de monitoramento de energia solar utilizando:
 
-Sonoff POWR2
+Disjuntor WiFi 4P100A com medição bidirecional
+
+Medidor inteligente dedicado para produção solar
 
 Utility Meter do Home Assistant
 
-Cards personalizados (Mushroom + Mod Card + Browser Mod)
+Cards personalizados (Mushroom + Card Mod + Browser Mod)
 
-Cálculo automático de consumo, produção, injeção e saldo energético
+Automação própria para reset do ciclo de faturamento
 
+O projeto realiza o cálculo automático de:
 
-- **⚙️ Equipamentos Utilizados**
-  - RMshebei Tuya Smart WiFi Disjuntor 4P100A
-  - Sonoff POWR2
+Consumo
 
-⚙️ Integrações
+Produção
 
-🔹 Home Asitant
+Energia injetada
 
-🔹 Browser - Mod Add-on 
+Saldo energético
 
-🔹 Mushroom Cards - Hack
+Valor estimado da conta
 
-🔹 Card Mod - Hacks
+Sem depender de offset automático do Utility Meter.
 
-📊 O que esse projeto calcula automaticamente
+⚙️ Equipamentos Utilizados
+
+RMshebei Tuya Smart WiFi Disjuntor 4P100A
+
+Sonoff POWR2
+
+🔌 Integrações Utilizadas
+
+🔹 Home Assistant
+
+🔹 Browser Mod
+
+🔹 Mushroom Cards
+
+🔹 Card Mod
+
+📊 O que o projeto calcula automaticamente
 
 ✔ Produção solar diária
-
 ✔ Produção solar mensal
-
-✔ Produção anual
-
+✔ Produção solar anual
 ✔ Energia injetada na rede
-
-✔ Consumo da casa
-
-✔ Cálculo do valor da conta
-
+✔ Consumo total da residência
+✔ Cálculo automático do valor da conta (baseado no valor do kWh configurado)
 ✔ Saldo mensal em kWh
-
 ✔ Balanço energético acumulado
+✔ Crédito ou débito energético do mês
 
-Tudo com ciclo mensal ajustado para fechamento no dia 20.
+🔄 Fechamento de Ciclo (IMPORTANTE)
 
-📁 1️⃣ sensors.yaml
+Este projeto não utiliza offset no Utility Meter.
+
+O fechamento da fatura é realizado através de:
+
+✔ Automação personalizada
+✔ Reset manual controlado
+✔ Execução automática no dia definido (ex: dia 25 às 23:59)
+
+Isso permite:
+
+Maior controle sobre o período de faturamento
+
+Independência do ciclo fixo do Utility Meter
+
+Ajuste fácil caso a concessionária altere a data de leitura
+
+🎯 Diferencial do Projeto
+
+✔ Sistema totalmente modular
+✔ Não interfere em outros cards que utilizem os mesmos sensores
+✔ Reset centralizado e organizado
+✔ Fácil adaptação para qualquer valor de kWh
+✔ Estrutura pronta para publicação no GitHu
+
+ 📁 1️⃣ sensors.yaml
 
 
-📁  Valor  de produção
+### 📁  Valor  de produção
 ```yaml
 ##################################################
-# TEMPLATE SENSORS
+# SENSORES (PLATFORM TEMPLATE)
 ##################################################
+- platform: template
 
-template:
-  - sensor:
+sensor:
+  - platform: template
+    sensors:
 
       ##################################################
       # PRODUÇÃO SOLAR (BASE)
       ##################################################
 
-      - name: "Producao Solar Semanal"
+      producao_solar_semanal:
+        friendly_name: "Producao Solar Semanal"
         unit_of_measurement: "kWh"
-        state: >
+        value_template: >
           {{ states('sensor.sonoff_1000916c58_energy') | float(0) }}
 
       ##################################################
       # CONSUMO ATUAL DUAS FASES
       ##################################################
 
-      - name: "Consumo Atual da Rede (kW)"
+      consumo_atual_rede_kw:
+        friendly_name: "Consumo Atual da Rede (kW)"
         unit_of_measurement: "kW"
-        state: >
+        value_template: >
           {{
             states('sensor.breaker_potencia_da_fase_a_2') | float(0)
             +
             states('sensor.breaker_potencia_da_fase_b_2') | float(0)
           }}
 
-      - name: "Consumo Atual da Rede (W)"
+      consumo_atual_rede_w:
+        friendly_name: "Consumo Atual da Rede (W)"
         unit_of_measurement: "W"
-        state: >
+        value_template: >
           {{
             (
               states('sensor.breaker_potencia_da_fase_a_2') | float(0)
@@ -109,57 +148,58 @@ template:
       # CUSTOS (base fixa 1.11)
       ##################################################
 
-      - name: "Valor kWh"
+      valor_kwh:
+        friendly_name: "Valor kWh"
         unit_of_measurement: "R$/kWh"
-        state: "1.11"
+        value_template: "1.11"
 
-      - name: "Custo Consumo Mensal"
+      custo_consumo_mensal:
+        friendly_name: "Custo Consumo Mensal"
         unit_of_measurement: "R$"
-        state: >
+        value_template: >
           {{ states('sensor.consumo_energia_mensal') | float(0) * 1.11 }}
 
-      - name: "Custo Produção Mensal"
+      custo_producao_mensal:
+        friendly_name: "Custo Produção Mensal"
         unit_of_measurement: "R$"
-        state: >
+        value_template: >
           {{ states('sensor.producao_solar_mensal') | float(0) * 1.11 }}
 
-      - name: "Custo Injetado Mensal"
+      custo_injetado_mensal:
+        friendly_name: "Custo Injetado Mensal"
         unit_of_measurement: "R$"
-        state: >
+        value_template: >
           {{ states('sensor.injecao_energia_mensal') | float(0) * 1.11 }}
 
       ##################################################
       # BALANÇOS
       ##################################################
 
-      - name: "Balanço Energético Acumulado"
+      balanco_energetico_acumulado:
+        friendly_name: "Balanço Energético Acumulado"
         unit_of_measurement: "kWh"
-        state: >
+        value_template: >
           {{
             states('sensor.breaker_energia_total_2') | float(0)
             -
             states('sensor.breaker_total_production_2') | float(0)
           }}
 
-      - name: "Saldo da Conta (kWh)"
+      saldo_conta_kwh:
+        friendly_name: "Saldo da Conta (kWh)"
         unit_of_measurement: "kWh"
-        state: >
+        value_template: >
           {{
             states('sensor.producao_solar_mensal') | float(0)
             -
             states('sensor.consumo_energia_mensal') | float(0)
           }}
-          
-(Deixei somente o que realmente é necessário. Os outros cálculos já são feitos pelo utility_meter.)
 ```
-📁  Valor do KW
+ ###📁  Valor do KW
 ```yaml
 ##################################################
 # VALOR DO KWH E CÁLCULOS DE CUSTO
 ##################################################
-
-- platform: template
-  sensors:
 
     custo_producao_semanal:
       friendly_name: "Custo Produção Semanal"
@@ -263,7 +303,7 @@ template:
         {{ (states('sensor.consumo_mensal_fatura') | float(0) * 1.11) | round(2) }}
 ```
 
-📁  Balanço Total 
+###📁  Balanço Total 
 ```yaml
 
       balanco_energetico_acumulado:
@@ -459,7 +499,7 @@ action:
 mode: single        
 
 ```
-
-
+Vini©¿©ius Mendes Corporations® 27/02/2026
+Sistema avançado de monitoramento energético desenvolvido para automação residencial inteligente com Home Assistant.
 
 ---
