@@ -65,201 +65,202 @@ Tudo com ciclo mensal ajustado para fechamento no dia 20.
 
 📁  Valor  de produção
 ```yaml
-- platform: template
-  sensors:
-  - platform: template
-    sensors:
+##################################################
+# TEMPLATE SENSORS
+##################################################
 
-      producao_solar_semanal:
-        friendly_name: "Producao Solar Semanal"
+template:
+  - sensor:
+
+      ##################################################
+      # PRODUÇÃO SOLAR (BASE)
+      ##################################################
+
+      - name: "Producao Solar Semanal"
         unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.sonoff_1000916c58_energy') | float }}
+        state: >
+          {{ states('sensor.sonoff_1000916c58_energy') | float(0) }}
 
-      producao_solar_amensal:
-        friendly_name: "Producao Solar Semanal"
-        unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.producao_solar_semanal') | float }}
+      ##################################################
+      # CONSUMO ATUAL DUAS FASES
+      ##################################################
 
-      producao_solar_mensal:
-        friendly_name: "Producao Solar Mensal"
-        unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.producao_solar_mensal') | float }}
-
-       producao_solar_anual:
-        friendly_name: "Producao Solar anual"
-        unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.producao_solar_anual') | float }}
-
-      energia_injetada_semanal:
-        friendly_name: "Energia Injetada Semanal"
-        unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.breaker_total_production_2') | float }}
-
-      energia_injetada_diaria:
-        friendly_name: "Energia Injetada Mensal"
-        unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.injecao_energia_mensal') | float }}
-
-        friendly_name: "Energia Injetada Anual"
-        unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.injecao_energia_anual') | float }}
-
-
-      consumo_energia_semanal:
-        friendly_name: "Consumo Energia Semanal"
-        unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.consumo_energia_semanal') | float }}
-
-      consumo_energia_amensal:
-        friendly_name: "Consumo Energia Mensal"
-        unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.consumo_energia_mensal') | float }}
-   
-      consumo_energia_anual:
-        friendly_name: "Consumo Energia Anual"
-        unit_of_measurement: "kWh"
-        value_template: >
-          {{ states('sensor.consumo_energia_anual') | float }}
-
-# Medidas duas fases em kW
-      consumo_atual_rede_kw:
-        friendly_name: "Consumo Atual da Rede (kW)"
+      - name: "Consumo Atual da Rede (kW)"
         unit_of_measurement: "kW"
-        value_template: >
+        state: >
           {{
             states('sensor.breaker_potencia_da_fase_a_2') | float(0)
             +
             states('sensor.breaker_potencia_da_fase_b_2') | float(0)
           }}
 
-# Medidas duas fases em W
-      consumo_atual_rede_w:
-        friendly_name: "Consumo Atual da Rede (W)"
+      - name: "Consumo Atual da Rede (W)"
         unit_of_measurement: "W"
-        value_template: >
+        state: >
           {{
             (
               states('sensor.breaker_potencia_da_fase_a_2') | float(0)
               +
               states('sensor.breaker_potencia_da_fase_b_2') | float(0)
             ) * 1000
-            | round(0)
+          }}
+
+      ##################################################
+      # CUSTOS (base fixa 1.11)
+      ##################################################
+
+      - name: "Valor kWh"
+        unit_of_measurement: "R$/kWh"
+        state: "1.11"
+
+      - name: "Custo Consumo Mensal"
+        unit_of_measurement: "R$"
+        state: >
+          {{ states('sensor.consumo_energia_mensal') | float(0) * 1.11 }}
+
+      - name: "Custo Produção Mensal"
+        unit_of_measurement: "R$"
+        state: >
+          {{ states('sensor.producao_solar_mensal') | float(0) * 1.11 }}
+
+      - name: "Custo Injetado Mensal"
+        unit_of_measurement: "R$"
+        state: >
+          {{ states('sensor.injecao_energia_mensal') | float(0) * 1.11 }}
+
+      ##################################################
+      # BALANÇOS
+      ##################################################
+
+      - name: "Balanço Energético Acumulado"
+        unit_of_measurement: "kWh"
+        state: >
+          {{
+            states('sensor.breaker_energia_total_2') | float(0)
+            -
+            states('sensor.breaker_total_production_2') | float(0)
+          }}
+
+      - name: "Saldo da Conta (kWh)"
+        unit_of_measurement: "kWh"
+        state: >
+          {{
+            states('sensor.producao_solar_mensal') | float(0)
+            -
+            states('sensor.consumo_energia_mensal') | float(0)
           }}
           
 (Deixei somente o que realmente é necessário. Os outros cálculos já são feitos pelo utility_meter.)
 ```
 📁  Valor do KW
 ```yaml
-      custo_producao_semanal:
-        friendly_name: "Custo Produção Semanal"
-        
-        value_template: >
-          {{ (states('sensor.producao_solar_semanal') | float * 1.11) | round(2) }}
+##################################################
+# VALOR DO KWH E CÁLCULOS DE CUSTO
+##################################################
 
-      custo_producao_mensal:
-        friendly_name: "Custo Produção Mensal"
-        
-        value_template: >
-          {{ (states('sensor.producao_solar_mensal') | float * 1.11) | round(2) }}
+- platform: template
+  sensors:
 
-      custo_producao_anual:
-        friendly_name: "Custo Produção Anual"
-        
-        value_template: >
-          {{ (states('sensor.producao_solar_anual') | float * 1.11) | round(2) }}
+    custo_producao_semanal:
+      friendly_name: "Custo Produção Semanal"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.producao_solar_semanal') | float(0) * 1.11) | round(2) }}
 
-      custo_injetado_semanal:
-        friendly_name: "Custo Injetado Semanal"
-        
-        value_template: >
-          {{ (states('sensor.energia_injetada_semanal') | float * 1.11) | round(2) }}
+    custo_producao_mensal:
+      friendly_name: "Custo Produção Mensal"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.producao_solar_mensal') | float(0) * 1.11) | round(2) }}
 
-      custo_injetado_mensal:
-        friendly_name: "Custo Injetado Mensal"
-        
-        value_template: >
-          {{ (states('sensor.injecao_energia_mensal') | float * 1.11) | round(2) }}
+    custo_producao_anual:
+      friendly_name: "Custo Produção Anual"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.producao_solar_anual') | float(0) * 1.11) | round(2) }}
 
-      custo_injetado_anual:
-        friendly_name: "Custo Injetado Anual"
-        
-        value_template: >
-          {{ (states('sensor.energia_injetada_anual') | float * 1.11) | round(2) }}
-          
-      custo_consumo_semanal:
-        friendly_name: "Custo Consumo Semanal"
-        
-        value_template: >
-          {{ (states('sensor.breaker_energia_total_2') | float * 1.11) | round(2) }}
+    custo_injetado_semanal:
+      friendly_name: "Custo Injetado Semanal"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.energia_injetada_semanal') | float(0) * 1.11) | round(2) }}
 
-      custo_consumo_anual:
-        friendly_name: "Custo Consumo Anual"
-        
-        value_template: >
-          {{ (states('sensor.consumo_energia_anual') | float * 1.11) | round(2) }}
+    custo_injetado_mensal:
+      friendly_name: "Custo Injetado Mensal"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.injecao_energia_mensal') | float(0) * 1.11) | round(2) }}
 
-      custo_potencia_atual:
-        friendly_name: "Custo Potência Atual"
-        
-        value_template: >
-          {{ ((states('sensor.sonoff_1000916c58_power') | float / 1000) * 1.11) | round(2) }}
+    custo_injetado_anual:
+      friendly_name: "Custo Injetado Anual"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.energia_injetada_anual') | float(0) * 1.11) | round(2) }}
 
-      custo_energia_injetada:
-        friendly_name: "Custo Energia Injetada"
-        
-        value_template: >
-          {{ (states('sensor.breaker_total_production_2') | float * 1.11) | round(2) }}
+    custo_consumo_semanal:
+      friendly_name: "Custo Consumo Semanal"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.breaker_energia_total_2') | float(0) * 1.11) | round(2) }}
 
-      custo_consumo_total:
-        friendly_name: "Custo Energia Consumida Total"
-        
-        value_template: >
-          {{ (states('sensor.breaker_energia_total_2') | float * 1.11) | round(2) }}
+    custo_consumo_anual:
+      friendly_name: "Custo Consumo Anual"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.consumo_energia_anual') | float(0) * 1.11) | round(2) }}
 
-      custo_consumo_dia:
-        friendly_name: "Custo Consumo Hoje"
-        
-        value_template: >
-          {{ (states('sensor.consumo_energia_diario') | float * 1.11) | round(2) }}
+    custo_potencia_atual:
+      friendly_name: "Custo Potência Atual"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ ((states('sensor.sonoff_1000916c58_power') | float(0) / 1000) * 1.11) | round(2) }}
 
-      custo_consumo_mensal:
-        friendly_name: "Custo Consumo Mensal"
-        
-        value_template: >
-          {{ (states('sensor.consumo_energia_mensal') | float * 1.11) | round(2) }}          
- 
-      custo_energia_kwh:
-        friendly_name: "Valor kWh"
-        unit_of_measurement: "R$/kWh"
-        value_template: "1.11"
+    custo_energia_injetada:
+      friendly_name: "Custo Energia Injetada"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.breaker_total_production_2') | float(0) * 1.11) | round(2) }}
 
-      custo_energia_dia:
-        friendly_name: "Custo Energia Dia"
-        unit_of_measurement: "R$"
-        value_template: >
-          {{ (states('sensor.consumo_energia_diario') | float * 1.11) | round(2) }}
+    custo_consumo_total:
+      friendly_name: "Custo Energia Consumida Total"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.breaker_energia_total_2') | float(0) * 1.11) | round(2) }}
 
-      custo_energia_mes:
-        friendly_name: "Custo Energia Mês"
-        unit_of_measurement: "R$"
-        value_template: >
-          {{ (states('sensor.consumo_energia_mensal') | float * 1.11) | round(2) }}
-                
-      valor_conta_mensal:
-        friendly_name: "Valor da Conta Atual"
-        
-        value_template: >
-          {{ (states('sensor.consumo_mensal_fatura') | float * 1.11) | round(2) }}         
-          
+    custo_consumo_dia:
+      friendly_name: "Custo Consumo Hoje"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.consumo_energia_diario') | float(0) * 1.11) | round(2) }}
+
+    custo_consumo_mensal:
+      friendly_name: "Custo Consumo Mensal"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.consumo_energia_mensal') | float(0) * 1.11) | round(2) }}
+
+    custo_energia_kwh:
+      friendly_name: "Valor kWh"
+      unit_of_measurement: "R$/kWh"
+      value_template: "1.11"
+
+    custo_energia_dia:
+      friendly_name: "Custo Energia Dia"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.consumo_energia_diario') | float(0) * 1.11) | round(2) }}
+
+    custo_energia_mes:
+      friendly_name: "Custo Energia Mês"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.consumo_energia_mensal') | float(0) * 1.11) | round(2) }}
+
+    valor_conta_mensal:
+      friendly_name: "Valor da Conta Atual"
+      unit_of_measurement: "R$"
+      value_template: >
+        {{ (states('sensor.consumo_mensal_fatura') | float(0) * 1.11) | round(2) }}
 ```
 
 📁  Balanço Total 
@@ -381,5 +382,84 @@ card:
         - sensor.sonoff_1000916c58_power
         - sensor.producao_solar_mensal
         - sensor.producao_solar_anual
+```
 
-        
+---
+
+📁 5️⃣ Automação de Reset dos Ciclos Energéticos
+
+```yaml
+
+alias: RESET GERAL TOTAL DIA 25
+description: Reseta sensores mensal, semanal e diário antes da leitura dia 26
+trigger:
+  - platform: time
+    at: "23:59:00"
+
+condition:
+  - condition: template
+    value_template: "{{ now().day == 25 }}"
+
+action:
+
+  ##################################################
+  # RESET DIÁRIO
+  ##################################################
+
+  - service: utility_meter.reset
+    target:
+      entity_id:
+        - sensor.consumo_energia_diario
+        - sensor.para_rede_diario
+        - sensor.via_rede_diario
+        - sensor.solar_diario
+        - sensor.tempo_aquecedor_diario
+
+  ##################################################
+  # RESET SEMANAL
+  ##################################################
+
+  - service: utility_meter.reset
+    target:
+      entity_id:
+        - sensor.producao_solar_semanal
+        - sensor.energia_injetada_semanal
+        - sensor.consumo_energia_semanal
+        - sensor.tempo_aquecedor_semanal
+
+  ##################################################
+  # RESET MENSAL (CARD)
+  ##################################################
+
+  - service: utility_meter.reset
+    target:
+      entity_id:
+        - sensor.consumo_energia_mensal
+        - sensor.injecao_energia_mensal
+        - sensor.producao_solar_mensal
+
+  ##################################################
+  # RESET INPUTS
+  ##################################################
+
+  - service: input_number.set_value
+    target:
+      entity_id:
+        - input_number.tempo_inicial
+        - input_number.tempo_final
+        - input_number.tempo_total
+        - input_number.consumo_boiler
+        - input_number.custo_boiler
+        - input_number.qtd_ligado
+        - input_number.tempo_medio_aquecimento
+        - input_number.producao_mensal_hoymiles
+    data:
+      value: 0
+
+mode: single        
+
+```
+
+
+
+---
