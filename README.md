@@ -76,11 +76,23 @@ Tudo com ciclo mensal ajustado para fechamento no dia 20.
         value_template: >
           {{ states('sensor.sonoff_1000916c58_energy') | float }}
 
-      producao_solar_anual:
-        friendly_name: "Producao Solar Anual"
+      producao_solar_amensal:
+        friendly_name: "Producao Solar Semanal"
+        unit_of_measurement: "kWh"
+        value_template: >
+          {{ states('sensor.producao_solar_semanal') | float }}
+
+      producao_solar_mensal:
+        friendly_name: "Producao Solar Mensal"
         unit_of_measurement: "kWh"
         value_template: >
           {{ states('sensor.producao_solar_mensal') | float }}
+
+       producao_solar_anual:
+        friendly_name: "Producao Solar anual"
+        unit_of_measurement: "kWh"
+        value_template: >
+          {{ states('sensor.producao_solar_anual') | float }}
 
       energia_injetada_semanal:
         friendly_name: "Energia Injetada Semanal"
@@ -88,23 +100,35 @@ Tudo com ciclo mensal ajustado para fechamento no dia 20.
         value_template: >
           {{ states('sensor.breaker_total_production_2') | float }}
 
-      energia_injetada_anual:
-        friendly_name: "Energia Injetada Anual"
+      energia_injetada_diaria:
+        friendly_name: "Energia Injetada Mensal"
         unit_of_measurement: "kWh"
         value_template: >
           {{ states('sensor.injecao_energia_mensal') | float }}
 
-      consumo_energia_anual:
-        friendly_name: "Consumo Energia Anual"
+        friendly_name: "Energia Injetada Anual"
         unit_of_measurement: "kWh"
         value_template: >
-          {{ states('sensor.consumo_energia_mensal') | float }}
+          {{ states('sensor.injecao_energia_anual') | float }}
+
 
       consumo_energia_semanal:
         friendly_name: "Consumo Energia Semanal"
         unit_of_measurement: "kWh"
         value_template: >
-          {{ states('sensor.consumo_energia_mensal') | float }}        
+          {{ states('sensor.consumo_energia_semanal') | float }}
+
+      consumo_energia_amensal:
+        friendly_name: "Consumo Energia Mensal"
+        unit_of_measurement: "kWh"
+        value_template: >
+          {{ states('sensor.consumo_energia_mensal') | float }}
+   
+      consumo_energia_anual:
+        friendly_name: "Consumo Energia Anual"
+        unit_of_measurement: "kWh"
+        value_template: >
+          {{ states('sensor.consumo_energia_anual') | float }}
 
 # Medidas duas fases em kW
       consumo_atual_rede_kw:
