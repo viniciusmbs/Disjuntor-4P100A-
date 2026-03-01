@@ -372,19 +372,115 @@ width="700"/>
 ```yaml
 type: custom:mushroom-template-card
 primary: >
-  Produção Solar: {{ states("sensor.sonoff_1000916c58_power") | float(0) | round(2) }} W
+  Produção Solar: {{ states("sensor.sonoff_1000916c58_power") | float(0) |
+  round(2) }} W
 secondary: >
   Dia: {{ states("sensor.sonoff_1000916c58_energy") | float(0) | round(2) }} kWh
   | Mês: {{ states("sensor.producao_solar_mensal") | float(0) | round(2) }} kWh
 icon: mdi:solar-panel
 icon_color: green
+badge_icon: mdi:solar-power-variant-outline
+badge_color: green
 tap_action:
   action: fire-dom-event
   browser_mod:
-    service: browser_mod.popup
+    service: browser_mod.sequence
     data:
-      content:
-        !include card_simples.yaml
+      sequence:
+        - service: script.pc_click
+        - service: browser_mod.popup
+          data:
+            content:
+              type: custom:mod-card
+              style: |
+                ha-card {
+                  background: linear-gradient(
+                    rgba(0,0,0,0.65),
+                    rgba(0,0,0,0.65)
+                  ), url("/local/cardpainel2.jpg") center/cover no-repeat;
+                  background-size: cover;
+                  background-position: center;
+                  border-radius: 18px;
+                  padding: 16px;
+                  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+                }
+              card:
+                type: vertical-stack
+                cards:
+                  - type: entities
+                    title: Produção Solar
+                    card_mod:
+                      style: |
+                        ha-card {
+                          background: transparent;
+                          box-shadow: none;
+                        }
+                    entities:
+                      - entity: sensor.sonoff_1000916c58_power
+                        name: Potência Atual
+                        icon: none
+                      - entity: sensor.producao_solar_mensal
+                        name: Produção no Mês
+                        icon: none
+                      - entity: sensor.producao_solar_anual
+                        name: Produção no Ano
+                        icon: none
+                  - type: entities
+                    title: Consumo da Casa
+                    card_mod:
+                      style: |
+                        ha-card {
+                          background: transparent;
+                          box-shadow: none;
+                        }
+                    entities:
+                      - entity: sensor.consumo_atual_rede_w
+                        name: Consumo Atual
+                        icon: none
+                      - entity: sensor.breaker_energia_total_2
+                        name: Energia Total
+                        icon: none
+                      - entity: sensor.consumo_energia_mensal
+                        name: Consumo Mensal
+                        icon: none
+                      - entity: sensor.valor_conta_mensal_real
+                        name: Valor Atual da Conta
+                        icon: none
+                  - type: entities
+                    title: Energia Injetada
+                    card_mod:
+                      style: |
+                        ha-card {
+                          background: transparent;
+                          box-shadow: none;
+                        }
+                    entities:
+                      - entity: sensor.injecao_energia_mensal
+                        name: Injetado no Mês
+                        icon: none
+                      - entity: sensor.energia_injetada_anual
+                        name: Injetado no Ano
+                        icon: none
+                      - type: custom:mushroom-template-card
+                        entity: sensor.saldo_mensal_kwh
+                        primary: Saldo da Conta (Mensal)
+                        secondary: >
+                          {% set v = states('sensor.saldo_mensal_kwh')|float %}
+                          {% if v >= 0 %}
+                            + {{ v | round(2) }} kWh
+                          {% else %}
+                            - {{ (v | abs) | round(2) }} kWh
+                          {% endif %}
+                        icon: mdi:circle
+                        icon_color: |
+                          {% if states('sensor.saldo_mensal_kwh')|float >= 0 %}
+                            green
+                          {% else %}
+                            red
+                          {% endif %}
+                        layout: horizontal
+                        fill_container: true
+
 ```
 ---
 <!-- Galeria de miniaturas -->
@@ -409,6 +505,8 @@ style: |
       rgba(0,0,0,0.65),
       rgba(0,0,0,0.65)
     ), url("/local/cardpainel2.jpg") center/cover no-repeat;
+    background-size: cover;
+    background-position: center;
     border-radius: 18px;
     padding: 16px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.4);
@@ -418,10 +516,67 @@ card:
   cards:
     - type: entities
       title: Produção Solar
+      card_mod:
+        style: |
+          ha-card {
+            background: transparent;
+            box-shadow: none;
+          }
       entities:
-        - sensor.sonoff_1000916c58_power
-        - sensor.producao_solar_mensal
-        - sensor.producao_solar_anual
+        - entity: sensor.sonoff_1000916c58_power
+          name: Potência Atual
+        - entity: sensor.producao_solar_mensal
+          name: Produção no Mês
+        - entity: sensor.producao_solar_anual
+          name: Produção no Ano
+    - type: entities
+      title: Consumo da Casa
+      card_mod:
+        style: |
+          ha-card {
+            background: transparent;
+            box-shadow: none;
+          }
+      entities:
+        - entity: sensor.breaker_energia_total_2
+          name: Energia Total
+        - entity: sensor.consumo_energia_mensal
+          name: Consumo Mensal
+        - entity: sensor.valor_conta_mensal_real
+          name: Valor Atual da Conta
+    - type: entities
+      title: Energia Injetada
+      card_mod:
+        style: |
+          ha-card {
+            background: transparent;
+            box-shadow: none;
+          }
+      entities:
+        - entity: sensor.injecao_energia_mensal
+          name: Injetado no Mês
+        - entity: sensor.energia_injetada_anual
+          name: Injetado no Ano
+        - type: custom:mushroom-template-card
+          entity: sensor.saldo_mensal_kwh
+          primary: Saldo da Conta (Mensal)
+          secondary: >
+            {% set v = states('sensor.saldo_mensal_kwh')|float %} {% if v >= 0
+            %}
+              + {{ v | round(2) }} kWh
+            {% else %}
+              - {{ (v | abs) | round(2) }} kWh
+            {% endif %}
+          icon: mdi:circle
+          icon_color: |
+            {% if states('sensor.saldo_mensal_kwh')|float >= 0 %}
+              green
+            {% else %}
+              red
+            {% endif %}
+          layout: horizontal
+          fill_container: true
+
 ```
 
 ---
