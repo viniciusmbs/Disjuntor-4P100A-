@@ -5,7 +5,7 @@ Integração com Home Assistant + Cálculo Solar + Dashboard Completo
 
 📺 Vídeo explicando todo o sistema:
 <p align="left">
-  <a href="https://youtu.be/I6ezCRUxces">
+  <a href="[https://youtu.be/I6ezCRUxces](https://www.youtube.com/watch?v=5-7WgpFBI8I&t=437s)">
    <img src="https://raw.githubusercontent.com/viniciusmbs/Disjuntor-4P100A-/main/CAPA.png" width="400"/>
   </a>
 </p>
